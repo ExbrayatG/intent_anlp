@@ -5,6 +5,7 @@ import torch
 from models import get_model_class, models
 from classification_layers import get_layer_class, layers
 from utils import train, evaluate
+from config import CLASSIFICATION_LAYERS
 
 
 def main(args):
@@ -47,8 +48,15 @@ def main(args):
         print("Adding classification layer")
     classification_layer_class = get_layer_class(args.classification_layer)
     num_labels = len(dataset["train"].features["Label"].names)
+    classification_layer_config = CLASSIFICATION_LAYERS.get(
+        args.classification_layer, {}
+    )
+    if args.verbose:
+        print("Classification layer config: ", classification_layer_config)
     classification_layer = classification_layer_class(
-        D_in=model.output_dim, H=300, D_out=num_labels  # TODO: add H to config
+        D_in=model.output_dim,
+        D_out=num_labels,
+        **classification_layer_config  # TODO: add H to config
     )
 
     model.classifier = classification_layer
