@@ -14,11 +14,18 @@ def train(
         model.train()
         for batch in tqdm(dataloader_train, desc=f"Epoch {epoch + 1}"):
             input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
+            if "attention_mask" in batch.keys():  # Transformer models
+                attention_mask = batch["attention_mask"].to(device)
+            else:
+                attention_mask = None
             labels = batch["labels"].to(device)
 
             optimizer.zero_grad()
-            logits = model(input_ids, attention_mask)
+            logits = (
+                model(input_ids)
+                if attention_mask is None
+                else model(input_ids, attention_mask)
+            )
             loss = torch.nn.CrossEntropyLoss()(logits, labels)
             loss.backward()
             optimizer.step()
@@ -39,10 +46,16 @@ def evaluate(model, dataloader, device):
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating"):
             input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
+            if "attention_mask" in batch.keys():  # Transformer models
+                attention_mask = batch["attention_mask"].to(device)
+            else:
+                attention_mask = None
             labels = batch["labels"].to(device)
-
-            logits = model(input_ids, attention_mask)
+            logits = (
+                model(input_ids)
+                if attention_mask is None
+                else model(input_ids, attention_mask)
+            )
             predictions = torch.argmax(logits, dim=1)
 
             total += labels.size(0)

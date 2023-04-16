@@ -3,13 +3,13 @@ from transformers import AutoModel
 
 
 class DistilBERTModel(nn.Module):
-    def __init__(self, classification_layer=None, dropout_perc=0.1) -> None:
+    def __init__(self, dropout_perc=0.1) -> None:
         super().__init__()
         self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
         self.dropout = nn.Dropout(dropout_perc)
         # The classification layer is actually supposed to be added later in the main script and not at initilization
         # This is because output_dim must first be computed before instantiating the classification layer
-        self.classifier = classification_layer
+        self.classifier = None
         self.output_dim = self.bert.config.hidden_size
 
     def forward(self, input_ids, attention_mask):
