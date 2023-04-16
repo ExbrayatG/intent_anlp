@@ -1,6 +1,7 @@
 from .one_layer_mlp import OneLayerMLP
+from .zero_layer_mlp import ZeroLayerMLP
 
-layers = {"one_layer_mlp": OneLayerMLP}
+layers = {"one_layer_mlp": OneLayerMLP, "zero_layer_mlp": ZeroLayerMLP}
 
 
 def get_layer_class(layer_name):
