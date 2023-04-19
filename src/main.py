@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--classification_model",
         type=str,
-        default="lstm",
+        default="one_layer_mlp",
         help="Name of the classification model to use (case insensitive). Must be one of : %s"
         % (list(layers.keys())),
     )
