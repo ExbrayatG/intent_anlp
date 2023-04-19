@@ -1,3 +1,2 @@
-CLASSIFICATION_LAYERS = {"one_layer_mlp": {"H": 300}}
-MODELS = {}
-TOKENIZERS = {}
+CLASSIFICATION_MODELS = {"one_layer_mlp": {"hidden_dim": 300}}
+EMBEDDINGS = {}

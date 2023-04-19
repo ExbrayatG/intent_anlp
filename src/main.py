@@ -1,26 +1,24 @@
 from data import load_dataset, create_dataloaders
-from ptokenizers import tokenize, tokenizers
 import argparse
 import torch
-from models import get_model_class, models
-from classification_layers import get_layer_class, layers
+from embeddings import get_embedding_class, models
+from classification_models import get_classification_model_class, layers
 from utils import train, evaluate
-from config import CLASSIFICATION_LAYERS, MODELS, TOKENIZERS
+from config import CLASSIFICATION_MODELS, EMBEDDINGS
 import wandb
 
 
 def main(args):
     wandb_config = {
-        "model": args.model,
-        "classification_layer": args.classification_layer,
+        "embedding": args.embedding,
+        "classification_model": args.classification_model,
         "dataset": args.dataset,
         "batch_size": args.batch_size,
         "epochs": args.epochs,
-        "classification_layer_config": CLASSIFICATION_LAYERS.get(
-            args.classification_layer, {}
+        "classification_model_config": CLASSIFICATION_MODELS.get(
+            args.classification_model, {}
         ),
-        "model_config": MODELS.get(args.model, {}),
-        "tokenizer_config": TOKENIZERS.get(args.model, {}),
+        "embedding_config": EMBEDDINGS.get(args.embedding, {}),
     }
 
     optional_args = {}
@@ -47,31 +45,29 @@ def main(args):
         print("Loading dataset")
     dataset = load_dataset(args.dataset)
 
-    class BaseModel(torch.nn.Module):
-        def __init__(self, dataset) -> None:
-            self.train_dataloder = None
-            self.validation_data = None
-            # Tokenize
-            # Put in dataloader
-            # Create the embedding model
-            # Create the classification model
-            pass
+    train_dataloader, val_dataloader, test_dataloader = create_dataloaders(
+        dataset, args.batch_size
+    )
 
-        def forward(self, x):
-            # Compute the embedding
-            # Classify
-            # Return logit
-            pass
+    embedding_layer = get_embedding_class(args.embedding)(
+        **EMBEDDINGS.get(args.embedding, {})
+    )
 
-    model = BaseModel(dataset)
+    num_labels = len(dataset["train"].features["Label"].names)
+
+    classification_model = get_classification_model_class(args.classification_model)(
+        embedding_layer,
+        num_labels,
+        **CLASSIFICATION_MODELS.get(args.classification_model, {})
+    )
 
     # Train the model
     if args.verbose:
         print("Training the model")
     train(
-        model,
-        model.train_dataloader,
-        model.val_dataloader,
+        classification_model,
+        train_dataloader,
+        val_dataloader,
         device,
         epochs=args.epochs,
         log_wandb=args.wandb,
@@ -80,7 +76,7 @@ def main(args):
     # Test the model
     if args.verbose:
         print("Testing the model")
-    accuracy = evaluate(model, model.test_dataloader, device)
+    accuracy = evaluate(classification_model, test_dataloader, device)
     print("Test accuracy: %s" % (accuracy,))
 
 
@@ -89,10 +85,10 @@ if __name__ == "__main__":
         description="Intent classifier training and evaluation"
     )
     parser.add_argument(
-        "--model",
+        "--embedding",
         type=str,
-        default="distilbert",
-        help="Name of the model to use (case insensitive). Must be one of : %s"
+        default="fasttext",
+        help="Name of the embedding to use (case insensitive). Must be one of : %s"
         % (list(models.keys())),
     )
     parser.add_argument(
@@ -108,10 +104,10 @@ if __name__ == "__main__":
         help="Size of batches for training",
     )
     parser.add_argument(
-        "--classification_layer",
+        "--classification_model",
         type=str,
-        default="one_layer_mlp",
-        help="Name of the classification layer to use (case insensitive). Must be one of : %s"
+        default="lstm",
+        help="Name of the classification model to use (case insensitive). Must be one of : %s"
         % (list(layers.keys())),
     )
     parser.add_argument(
