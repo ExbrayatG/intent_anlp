@@ -1,10 +1,17 @@
 from torch.optim import AdamW
 from tqdm import tqdm
 import torch
+import wandb
 
 
 def train(
-    model, dataloader_train, dataloader_validation, device, epochs=5, learning_rate=2e-5
+    model,
+    dataloader_train,
+    dataloader_validation,
+    device,
+    epochs=5,
+    learning_rate=2e-5,
+    log_wandb=False,
 ):
     model.to(device)
     optimizer = AdamW(model.parameters(), lr=learning_rate)
@@ -29,13 +36,19 @@ def train(
             loss = torch.nn.CrossEntropyLoss()(logits, labels)
             loss.backward()
             optimizer.step()
-
             epoch_loss += loss.item()
-        print(
-            f"Training Loss after epoch {epoch + 1}: {epoch_loss / len(dataloader_train)}"
-        )
-        accuracy = evaluate(model, dataloader_validation, device)
+        training_loss = epoch_loss / len(dataloader_train)
+        print(f"Training Loss after epoch {epoch + 1}: {training_loss:.4f}")
+        accuracy, validation_loss = evaluate(model, dataloader_validation, device)
         print("Validation accuracy: %s" % (accuracy,))
+        if log_wandb:
+            wandb.log(
+                {
+                    "training_loss": training_loss,
+                    "validation_accuracy": accuracy,
+                    "validation_loss": validation_loss,
+                }
+            )
 
 
 def evaluate(model, dataloader, device):
@@ -43,6 +56,7 @@ def evaluate(model, dataloader, device):
     model.eval()
     total = 0
     correct = 0
+    total_loss = 0
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating"):
             input_ids = batch["input_ids"].to(device)
@@ -61,5 +75,9 @@ def evaluate(model, dataloader, device):
             total += labels.size(0)
             correct += (predictions == labels).sum().item()
 
+            loss = torch.nn.CrossEntropyLoss()(logits, labels)
+            total_loss += loss.item()
+
     accuracy = correct / total
-    return accuracy
+    avg_loss = total_loss / len(dataloader)
+    return accuracy, avg_loss
