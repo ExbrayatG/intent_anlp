@@ -47,56 +47,31 @@ def main(args):
         print("Loading dataset")
     dataset = load_dataset(args.dataset)
 
-    # Tokenize
-    if args.verbose:
-        print("Tokenizing dataset")
-    (
-        tokenized_dataset_train,
-        tokenized_dataset_validation,
-        tokenized_dataset_test,
-    ) = tokenize(args.model, dataset)
+    class BaseModel(torch.nn.Module):
+        def __init__(self, dataset) -> None:
+            self.train_dataloder = None
+            self.validation_data = None
+            # Tokenize
+            # Put in dataloader
+            # Create the embedding model
+            # Create the classification model
+            pass
 
-    # Create dataloaders
-    if args.verbose:
-        print("Creating dataloaders")
-    train_dataloader, val_dataloader, test_dataloader = create_dataloaders(
-        tokenized_dataset_train,
-        tokenized_dataset_validation,
-        tokenized_dataset_test,
-        dataset,
-    )
+        def forward(self, x):
+            # Compute the embedding
+            # Classify
+            # Return logit
+            pass
 
-    # Create model
-    if args.verbose:
-        print("Creating model")
-    model_class = get_model_class(args.model)
-    model = model_class()
-
-    # Add classification layer
-    if args.verbose:
-        print("Adding classification layer")
-    classification_layer_class = get_layer_class(args.classification_layer)
-    num_labels = len(dataset["train"].features["Label"].names)
-    classification_layer_config = CLASSIFICATION_LAYERS.get(
-        args.classification_layer, {}
-    )
-    if args.verbose:
-        print("Classification layer config: ", classification_layer_config)
-    classification_layer = classification_layer_class(
-        D_in=model.output_dim,
-        D_out=num_labels,
-        **classification_layer_config  # TODO: add H to config
-    )
-
-    model.classifier = classification_layer
+    model = BaseModel(dataset)
 
     # Train the model
     if args.verbose:
         print("Training the model")
     train(
         model,
-        train_dataloader,
-        val_dataloader,
+        model.train_dataloader,
+        model.val_dataloader,
         device,
         epochs=args.epochs,
         log_wandb=args.wandb,
@@ -105,7 +80,7 @@ def main(args):
     # Test the model
     if args.verbose:
         print("Testing the model")
-    accuracy = evaluate(model, test_dataloader, device)
+    accuracy = evaluate(model, model.test_dataloader, device)
     print("Test accuracy: %s" % (accuracy,))
 
 
