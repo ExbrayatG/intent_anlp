@@ -5,11 +5,40 @@ import torch
 from models import get_model_class, models
 from classification_layers import get_layer_class, layers
 from utils import train, evaluate
-from config import CLASSIFICATION_LAYERS
+from config import CLASSIFICATION_LAYERS, MODELS, TOKENIZERS
+import wandb
 
 
 def main(args):
+    wandb_config = {
+        "model": args.model,
+        "classification_layer": args.classification_layer,
+        "dataset": args.dataset,
+        "batch_size": args.batch_size,
+        "epochs": args.epochs,
+        "classification_layer_config": CLASSIFICATION_LAYERS.get(
+            args.classification_layer, {}
+        ),
+        "model_config": MODELS.get(args.model, {}),
+        "tokenizer_config": TOKENIZERS.get(args.model, {}),
+    }
+
+    optional_args = {}
+    if args.run_name is not None:
+        optional_args["name"] = args.run_name
+    if args.run_group is not None:
+        optional_args["group"] = args.run_group
+
+    if args.wandb:
+        wandb.init(
+            project="intent-anlp",
+            entity="projet-ovations",
+            config=wandb_config,
+            **optional_args
+        )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     if args.verbose:
         print("Running on device: ", device)
 
@@ -64,7 +93,14 @@ def main(args):
     # Train the model
     if args.verbose:
         print("Training the model")
-    train(model, train_dataloader, val_dataloader, device, epochs=2)
+    train(
+        model,
+        train_dataloader,
+        val_dataloader,
+        device,
+        epochs=args.epochs,
+        log_wandb=args.wandb,
+    )
 
     # Test the model
     if args.verbose:
@@ -77,11 +113,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Intent classifier training and evaluation"
     )
-
     parser.add_argument(
         "--model",
         type=str,
-        default="fasttext",
+        default="distilbert",
         help="Name of the model to use (case insensitive). Must be one of : %s"
         % (list(models.keys())),
     )
@@ -110,6 +145,17 @@ if __name__ == "__main__":
         default=True,
         help="Whether to print informations about the process",
     )
+    parser.add_argument(
+        "--wandb",
+        type=bool,
+        default=False,
+        help="Whether to use weight and biases for logging the training and evaluation",
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=2, help="Number of epochs to train for"
+    )
+    parser.add_argument("--run_name", type=str, default=None, help="Name of the run")
+    parser.add_argument("--run_group", type=str, default=None, help="Group of the run")
     args = parser.parse_args()
 
     main(args)
