@@ -17,7 +17,11 @@ class FastTextLayer(nn.Module):
             for utterance in inputs
         ]
 
+        # Create a mask to track non-padding tokens
+        mask = [torch.ones(len(utterance.split())) for utterance in inputs]
+        mask = nn.utils.rnn.pad_sequence(mask, batch_first=True, padding_value=0)
+
         # Pad the sequences to the same length
         embeddings = nn.utils.rnn.pad_sequence(embeddings, batch_first=True)
 
-        return embeddings.to(self.device)
+        return embeddings.to(self.device), mask.to(self.device)

@@ -19,27 +19,23 @@ class OneLayerMLP(nn.Module):
 
     def forward(self, inputs):
         # inputs is a list of tokenized utterances
-        embeddings = self.embedding_layer(inputs)
+        embeddings, mask = self.embedding_layer(inputs)
 
         # Average the embeddings
-        # Remove padding tokens (all-zero rows) and calculate the average for each utterance
-        # TODO: Replace this by a mask
-        averaged_embeddings = []
-        for emb in embeddings:
-            non_zero_emb = list(filter(lambda x: torch.any(x != 0), emb))
-            if non_zero_emb:
-                non_zero_emb = torch.stack(non_zero_emb)
-                avg_emb = torch.mean(non_zero_emb, dim=0)
-            else:
-                avg_emb = torch.zeros(self.embedding_layer.embedding_dim).to(
-                    self.device
-                )
-            averaged_embeddings.append(avg_emb)
+        if mask is not None:
+            # Calculate the sum of embeddings
+            summed_embeddings = torch.sum(embeddings * mask.unsqueeze(-1), dim=1)
 
-        # Convert the list of averaged embeddings to a tensor
-        averaged_embeddings = torch.stack(averaged_embeddings)
+            # Calculate the number of tokens in each utterance
+            token_count = torch.sum(mask, dim=1, keepdim=True)
+
+            # Calculate the average of embeddings
+            averaged_embeddings = summed_embeddings / token_count
+        else:
+            # Convert the list of averaged embeddings to a tensor
+            averaged_embeddings = torch.mean(embeddings, dim=1)
 
         # Pass the embeddings through the MLP layer
-        final_out = self.network(averaged_embeddings)
+        final_out = self.network(averaged_embeddings.to(self.device))
 
         return final_out

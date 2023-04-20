@@ -18,7 +18,7 @@ class LSTM(nn.Module):
 
     def forward(self, inputs):
         # inputs is a list of tokenized utterances
-        embeddings = self.embedding_layer(inputs)
+        embeddings, mask = self.embedding_layer(inputs)
 
         # Pass the embeddings through the LSTM layer
         lstm_out, _ = self.lstm_layer(embeddings)

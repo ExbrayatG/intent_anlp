@@ -12,12 +12,23 @@ class ZeroLayerMLP(nn.Module):
 
     def forward(self, inputs):
         # inputs is a list of tokenized utterances
-        embeddings = self.embedding_layer(inputs)
+        embeddings, mask = self.embedding_layer(inputs)
 
         # Average the embeddings
-        average_embeddings = torch.mean(embeddings, dim=1)  # TODO - check this
+        if mask is not None:
+            # Calculate the sum of embeddings
+            summed_embeddings = torch.sum(embeddings * mask.unsqueeze(-1), dim=1)
+
+            # Calculate the number of tokens in each utterance
+            token_count = torch.sum(mask, dim=1, keepdim=True)
+
+            # Calculate the average of embeddings
+            averaged_embeddings = summed_embeddings / token_count
+        else:
+            # Convert the list of averaged embeddings to a tensor
+            averaged_embeddings = torch.mean(embeddings, dim=1)
 
         # Pass the embeddings through the MLP layer
-        final_out = self.network(average_embeddings)
+        final_out = self.network(averaged_embeddings.to(self.device))
 
         return final_out

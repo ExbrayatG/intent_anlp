@@ -19,4 +19,5 @@ class DistilBertLayer(nn.Module):
         outputs = self.model(**encoded_inputs)[
             0
         ]  # Only retrieve the token embeddings, not the attention masks
-        return outputs
+        mask = None
+        return outputs, mask
