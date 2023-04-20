@@ -4,6 +4,8 @@ from .lstm import LSTM
 from .cnnlstm import CNNLSTM
 from .bilstm import BiLSTM
 from .cnn import CNN
+from .three_layer_mlp import ThreeLayerMLP
+from .cnn2mlp import CNN2MLP
 
 layers = {
     "one_layer_mlp": OneLayerMLP,
@@ -12,6 +14,8 @@ layers = {
     "cnnlstm": CNNLSTM,
     "bilstm": BiLSTM,
     "cnn": CNN,
+    "three_layer_mlp": ThreeLayerMLP,
+    "cnn2mlp": CNN2MLP,
 }
 
 
