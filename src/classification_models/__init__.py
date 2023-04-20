@@ -1,8 +1,16 @@
 from .one_layer_mlp import OneLayerMLP
 from .zero_layer_mlp import ZeroLayerMLP
 from .lstm import LSTM
+from .cnnlstm import CNNLSTM
+from .bilstm import BiLSTM
 
-layers = {"one_layer_mlp": OneLayerMLP, "zero_layer_mlp": ZeroLayerMLP, "lstm": LSTM}
+layers = {
+    "one_layer_mlp": OneLayerMLP,
+    "zero_layer_mlp": ZeroLayerMLP,
+    "lstm": LSTM,
+    "cnnlstm": CNNLSTM,
+    "bilstm": BiLSTM,
+}
 
 
 def get_classification_model_class(layer_name):

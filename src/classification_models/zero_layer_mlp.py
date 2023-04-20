@@ -6,7 +6,7 @@ class ZeroLayerMLP(nn.Module):
     def __init__(self, embedding_layer, num_classes):
         super(ZeroLayerMLP, self).__init__()
         self.num_classes = num_classes
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.embedding_layer = embedding_layer
         self.network = nn.Linear(self.embedding_layer.embedding_dim, self.num_classes)
 

@@ -123,7 +123,7 @@ if __name__ == "__main__":
         help="Whether to use weight and biases for logging the training and evaluation",
     )
     parser.add_argument(
-        "--epochs", type=int, default=2, help="Number of epochs to train for"
+        "--epochs", type=int, default=10, help="Number of epochs to train for"
     )
     parser.add_argument("--run_name", type=str, default=None, help="Name of the run")
     parser.add_argument("--run_group", type=str, default=None, help="Group of the run")
