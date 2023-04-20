@@ -4,5 +4,6 @@ CLASSIFICATION_MODELS = {
     "lstm": {"hidden_dim": 300},
     "cnnlstm": {"hidden_dim": 300, "num_filters": 100, "kernel_size": 3},
     "bilstm": {"hidden_dim": 300},
+    "cnn": {"num_filters": 100, "kernel_size": 3},
 }
 EMBEDDINGS = {}
